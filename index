@@ -1,0 +1,293 @@
+<html>
+<head>
+  <base href="." />
+  <title>Community Steam Game Hub</title>
+  <style>
+    :root {
+      --steam-blue: #1b2838;
+      --steam-dark: #171a21;
+      --steam-light: #66c0f4;
+      --steam-green: #5c7e10;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--steam-blue);
+      color: #fff;
+      background-image: linear-gradient(45deg, var(--steam-blue) 0%, var(--steam-dark) 100%);
+    }
+
+    .header {
+      background: var(--steam-dark);
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 2px solid var(--steam-light);
+      box-shadow: 0 2px 10px rgba(102, 192, 244, 0.2);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    .upload-section {
+      background: rgba(0,0,0,0.4);
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(102, 192, 244, 0.3);
+      box-shadow: 0 0 15px rgba(102, 192, 244, 0.1);
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .game-card {
+      background: rgba(0,0,0,0.4);
+      border-radius: 8px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      border: 1px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--steam-light), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .game-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(102, 192, 244, 0.3);
+      box-shadow: 0 5px 15px rgba(102, 192, 244, 0.2);
+    }
+
+    .game-card:hover::before {
+      opacity: 1;
+    }
+
+    .game-title {
+      color: var(--steam-light);
+      margin-bottom: 0.8rem;
+      font-size: 1.2rem;
+      text-shadow: 0 0 10px rgba(102, 192, 244, 0.3);
+    }
+
+    .game-details {
+      font-size: 0.9rem;
+      color: #acb2b8;
+      line-height: 1.4;
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-btn {
+      background: linear-gradient(to bottom, var(--steam-light) 0%, #4b89b5 100%);
+      color: #fff;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 1rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .upload-btn:hover {
+      background: linear-gradient(to bottom, #7ccbff 0%, var(--steam-light) 100%);
+      box-shadow: 0 0 10px rgba(102, 192, 244, 0.4);
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    input[type="text"] {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(102, 192, 244, 0.3);
+      color: #fff;
+      border-radius: 4px;
+      transition: all 0.3s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--steam-light);
+      box-shadow: 0 0 10px rgba(102, 192, 244, 0.2);
+      outline: none;
+    }
+
+    .download-btn {
+      background: linear-gradient(to bottom, var(--steam-green) 0%, #4c6b0d 100%);
+      color: #fff;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 1rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .download-btn:hover {
+      background: linear-gradient(to bottom, #75a312 0%, var(--steam-green) 100%);
+      box-shadow: 0 0 10px rgba(92, 126, 16, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Community Steam Game Hub</h1>
+  </div>
+
+  <div class="container">
+    <div class="upload-section">
+      <h2>Share Your Game</h2>
+      <div id="upload-form">
+        <input type="text" id="game-title" placeholder="Game Title" style="padding: 0.5rem; margin: 0.5rem 0; width: 100%;">
+        <input type="text" id="game-description" placeholder="Game Description" style="padding: 0.5rem; margin: 0.5rem 0; width: 100%;">
+        <input type="file" id="game-file" class="file-input" accept=".zip,.exe,.jar">
+        <button class="upload-btn" onclick="document.getElementById('game-file').click()">Select Game File</button>
+        <button class="upload-btn" onclick="uploadGame()">Upload Game</button>
+      </div>
+    </div>
+
+    <div class="games-grid" id="games-container">
+      <!-- Games will be displayed here -->
+    </div>
+  </div>
+
+  <script>
+    const gamesCollection = []; // Local storage for games
+
+    async function uploadGame() {
+      const titleInput = document.getElementById('game-title');
+      const descriptionInput = document.getElementById('game-description');
+      const fileInput = document.getElementById('game-file');
+
+      if (!titleInput.value || !descriptionInput.value || !fileInput.files[0]) {
+        alert('Please fill in all fields and select a file');
+        return;
+      }
+
+      try {
+        const file = fileInput.files[0];
+
+        // For simplicity, we'll just simulate file URL (you can use actual file uploading logic here)
+        const fileUrl = URL.createObjectURL(file);
+
+        // Create a new game record and add it to the collection
+        const game = {
+          title: titleInput.value,
+          description: descriptionInput.value,
+          fileUrl: fileUrl,
+          fileName: file.name,
+          fileSize: file.size,
+          uploadedAt: new Date().toISOString(),
+        };
+        gamesCollection.push(game);
+
+        // Clear the form
+        titleInput.value = '';
+        descriptionInput.value = '';
+        fileInput.value = '';
+        
+        alert('Game uploaded successfully!');
+        renderGames(gamesCollection); // Re-render games list
+      } catch (error) {
+        console.error('Error uploading game:', error);
+        alert('Error uploading game. Please try again.');
+      }
+    }
+
+    // Function to format file size
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Function to format date
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffTime = Math.abs(now - date);
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) return 'Today';
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays} days ago`;
+      return date.toLocaleDateString();
+    }
+
+    // Function to render games
+    function renderGames(games) {
+      const container = document.getElementById('games-container');
+      container.innerHTML = '';
+
+      games.forEach(game => {
+        const gameCard = document.createElement('div');
+        gameCard.className = 'game-card';
+
+        const gameContent = document.createElement('div');
+        gameContent.innerHTML = `
+          <h3 class="game-title">${game.title}</h3>
+          <p class="game-details">${game.description}</p>
+          <p class="game-details">
+            <svg style="width: 14px; height: 14px; vertical-align: middle; margin-right: 5px;" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"/>
+            </svg>
+            ${formatDate(game.uploadedAt)}
+          </p>
+          <p class="game-details">
+            <svg style="width: 14px; height: 14px; vertical-align: middle; margin-right: 5px;" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"/>
+              <path fill-rule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd"/>
+            </svg>
+            ${formatFileSize(game.fileSize)}
+          </p>
+          <a href="${game.fileUrl}" download="${game.fileName}" class="download-btn">
+            <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+            Download Game
+          </a>
+        `;
+
+        gameCard.appendChild(gameContent);
+        container.appendChild(gameCard);
+      });
+    }
+
+    // Initially render games if there are any
+    renderGames(gamesCollection);
+  </script>
+</body>
+</html>
